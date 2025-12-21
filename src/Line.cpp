@@ -8,6 +8,7 @@ Vec3* Line::lineIntersect(const Line& line) const {
     Vec3 d1 = point_b - point_a;
     Vec3 p2 = line.point_a;
     Vec3 d2 = line.point_b - line.point_a;
+    
 
     Vec3 cross_d = d1.cross(d2);
     float denom = cross_d.norm();
@@ -37,6 +38,12 @@ bool Line::containsPoint(const Vec3& point) const {
     Vec3 cross_prod = AB.cross(AP);
     const float EPS = 1e-6f;
     return cross_prod.norm() < EPS;
+}
+Vec3 Line::getA() const {
+    return point_a;
+}
+Vec3 Line::getB() const {
+    return point_b;
 }
 
 GeometryType Line::getType() const {

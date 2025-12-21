@@ -1,3 +1,6 @@
+#pragma once
+
+#include "GeometryBody.h"
 #include "Vec3.h"
 
 class Line : public GeometryBody {
@@ -12,4 +15,6 @@ class Line : public GeometryBody {
         Vec3* lineIntersect(const Line& line) const override;
         bool containsPoint(const Vec3& point) const override;
         GeometryType getType() const override;
+            Vec3 getA() const;
+            Vec3 getB() const;
 };

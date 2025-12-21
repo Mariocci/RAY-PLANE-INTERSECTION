@@ -1,6 +1,9 @@
+#pragma once
+
 #include "Vec3.h"
-#include "Line.h"
 #include "GeometryType.h"
+
+class Line;
 
 class GeometryBody {
 public:
