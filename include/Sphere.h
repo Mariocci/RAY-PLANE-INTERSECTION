@@ -1,6 +1,10 @@
+#pragma once
+
 #include "GeometryBody.h"
 #include "Vec3.h"
 #include "GeometryType.h"
+
+class Line;
 
 class Sphere : public GeometryBody {
     private:
@@ -13,5 +17,6 @@ class Sphere : public GeometryBody {
 
         Vec3* lineIntersect(const Line& line) const override;
         bool containsPoint(const Vec3& point) const override;
+        Vec3 randomPointInside() const override;
         GeometryType getType() const override;
 };

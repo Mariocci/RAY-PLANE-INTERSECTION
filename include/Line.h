@@ -14,6 +14,7 @@ class Line : public GeometryBody {
 
         Vec3* lineIntersect(const Line& line) const override;
         bool containsPoint(const Vec3& point) const override;
+        Vec3 randomPointInside() const override;
         GeometryType getType() const override;
             Vec3 getA() const;
             Vec3 getB() const;

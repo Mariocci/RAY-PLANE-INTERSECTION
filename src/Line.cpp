@@ -49,3 +49,7 @@ Vec3 Line::getB() const {
 GeometryType Line::getType() const {
     return GeometryType::Line;
 }
+
+Vec3 Line::randomPointInside() const {
+    return (point_a + point_b) * 0.5f;
+}

@@ -1,60 +1,119 @@
 #include "Cylinder.h"
+#include "../include/Line.h"
 #include <cmath>
+#include <algorithm>
+#include <vector>
+#include <random>
 
 const GeometryType Cylinder::type = GeometryType::Cylinder;
 
-Cylinder::Cylinder(const Vec3& base_center_lower, const float radius, const float height) : base_center_lower(base_center_lower), radius(radius), height {}
+Cylinder::Cylinder(Vec3 base_center_lower, 
+				   Vec3 base_center_upper,
+				   float radius,
+				   float height
+				  ) : base_center_lower(base_center_lower), base_center_upper(base_center_upper), radius(radius), height(height) {}
 
-Vec3* Sphere::lineIntersect(const Line& line) const {
-	double x[3];
-	double y[3];
-	double z[3];
+Vec3* Cylinder::lineIntersect(const Line& line) const {
+	Vec3 a = line.getA();
+	Vec3 d = line.getB() - a;
 
-	x[0] = std::pow((line.getA()[0] - this->center[0]) , 2);
-	x[1] = 2 * (line.getD1()[0]) * (line.getA()[0] - this->center[0]);
-	x[2] = std::pow((line.getD1())[0] , 2);
+	Vec3 c1 = base_center_lower;
+	Vec3 c2 = base_center_upper;
+	Vec3 v = c2 - c1;
+	float h = v.norm();
+	const float EPS = 1e-6f;
+	if (h < EPS) return nullptr;
+	Vec3 v_hat = v / h;
 
-	y[0] = std::pow((line.getA()[1] - this->center[1]) , 2);
-	y[1] = 2 * (line.getD1()[1]) * (line.getA()[1] - this->center[1]);
-	y[2] = std::pow((line.getD1())[1] , 2);
+	Vec3 d_par = v_hat * d.dot(v_hat);
+	Vec3 m = d - d_par; 
 
-	z[0] = std::pow((line.getA()[2] - this->center[2]) , 2);
-	z[1] = 2 * (line.getD1()[2]) * (line.getA()[2] - this->center[2]);
-	z[2] = std::pow((line.getD1())[2] , 2);	
+	Vec3 a_minus_c1 = a - c1;
+	Vec3 a_par = v_hat * a_minus_c1.dot(v_hat);
+	Vec3 w = a_minus_c1 - a_par; 
 
-	double sum[3] = { x[0] + y[0] + z[0],
-					  x[1] + y[1] + z[1],
-					  x[2] + y[2] + z[2] };
-	double discriminant = sum[1] * sum[1] - 4 * sum[0] * (sum[2] - std::pow( this->radius, 2));
+	double A = m.dot(m);
+	double B = 2.0 * m.dot(w);
+	double C = w.dot(w) - (double)radius * (double)radius;
 
-    if (discriminant < 0.0) {
-        // No intersection
-        return nullptr;
-    } else if (discriminant == 0.0) {
-		// One intersection (tangent)
-		double t = -sum[1] / (2 * sum[2]);
-		Vec3 intersection = line.getA() + line.getD1() * t + this->center;
-		return new Vec3(intersection);
-    } else {
-        // Two intersections
-		double t1 = (-sum[1] + std::sqrt(discriminant)) / (2 * sum[2]);
-		double t2 = (-sum[1] - std::sqrt(discriminant)) / (2 * sum[2]);
-		Vec3 intersection1 = line.getA() + line.getD1() * t1 + this->center;
-		Vec3 intersection2 = line.getA() + line.getD1() * t2 + this->center;
-		return std::min(new Vec3(intersection1), new Vec3(intersection2), 
-						[line](const Vec3* a, const Vec3* b) {
-							double distA = line.getA().distance(*a);
-							double distB = line.getA().distance(*b);
-							return distA < distB;
-						});
-    }
+	if (std::abs(A) < EPS) {
+		return nullptr;
+	}
+
+	double disc = B * B - 4 * A * C;
+	if (disc < 0.0) return nullptr;
+
+	std::vector<std::pair<double, Vec3>> candidates;
+	auto test_t = [&](double t) {
+		Vec3 p = a + d * (float)t;
+		double proj = (p - c1).dot(v_hat);
+		if (proj >= 0.0 && proj <= h) {
+			candidates.emplace_back(t, p);
+		}
+	};
+
+	if (disc == 0.0) {
+		double t = -B / (2 * A);
+		test_t(t);
+	} else {
+		double sqrt_d = std::sqrt(disc);
+		double t1 = (-B + sqrt_d) / (2 * A);
+		double t2 = (-B - sqrt_d) / (2 * A);
+		test_t(t1);
+		test_t(t2);
+	}
+
+	if (candidates.empty()) return nullptr;
+
+	auto cmp = [](const std::pair<double, Vec3>& p1, const std::pair<double, Vec3>& p2){
+		return std::abs(p1.first) < std::abs(p2.first);
+	};
+
+	auto best = std::min_element(candidates.begin(), candidates.end(), cmp);
+	return new Vec3(best->second);
 }
 
-bool Sphere::containsPoint(const Vec3& point) const {
-	return center.distance(point) <= radius;
+bool Cylinder::containsPoint(const Vec3& point) const {
+	Vec3 v = base_center_upper - base_center_lower;
+	float h = v.norm();
+	const float EPS = 1e-6f;
+	if (h < EPS) return false;
+	Vec3 v_hat = v / h;
+	Vec3 rel = point - base_center_lower;
+	float proj = rel.dot(v_hat);
+	if (proj < 0.0f || proj > h) return false;
+	Vec3 perp = rel - v_hat * proj;
+	return perp.norm() <= radius;
 }
 
-GeometryType Sphere::getType() const {
-	return Sphere::type;
+GeometryType Cylinder::getType() const {
+	return Cylinder::type;
+}
+
+Vec3 Cylinder::randomPointInside() const {
+	static thread_local std::mt19937 gen(std::random_device{}());
+	std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
+
+	float u = dist01(gen);
+	float phi = 2.0f * (float)std::acos(-1.0) * dist01(gen);
+	float r = radius * std::sqrt(u);
+	float z = dist01(gen) * height;
+
+	Vec3 v = base_center_upper - base_center_lower;
+	float h = v.norm();
+	const float EPS = 1e-6f;
+	if (h < EPS) return base_center_lower;
+	Vec3 v_hat = v / h;
+
+	Vec3 arbitrary = (std::abs(v_hat.x) < 0.9f) ? Vec3(1.0f, 0.0f, 0.0f) : Vec3(0.0f, 1.0f, 0.0f);
+	Vec3 uvec = v_hat.cross(arbitrary);
+	float unorm = uvec.norm();
+	if (unorm < EPS) return base_center_lower + v_hat * z;
+	uvec = uvec / unorm;
+	Vec3 wvec = v_hat.cross(uvec);
+
+	Vec3 point_on_axis = base_center_lower + v_hat * z;
+	Vec3 radial = uvec * (r * std::cos(phi)) + wvec * (r * std::sin(phi));
+	return point_on_axis + radial;
 }
 
