@@ -31,7 +31,7 @@ Vec3* Sphere::lineIntersect(const Line& line) const {
 	double sum[3] = { x[0] + y[0] + z[0],
 				  x[1] + y[1] + z[1],
 				  x[2] + y[2] + z[2] };
-	double discriminant = sum[1] * sum[1] - 4 * sum[0] * (sum[2] - std::pow( this->radius, 2));
+	double discriminant = sum[1]*sum[1] - 4*sum[2]*(sum[0] - std::pow( this->radius, 2));
 
     if (discriminant < 0.0) {
         // No intersection
@@ -40,19 +40,23 @@ Vec3* Sphere::lineIntersect(const Line& line) const {
  		// One intersection (tangent)
  		double t = -sum[1] / (2 * sum[2]);
  		Vec3 intersection = a + d * t;
-		return new Vec3(intersection);
+		return new Vec3(intersection + this -> center);
     } else {
         // Two intersections
-		double t1 = (-sum[1] + std::sqrt(discriminant)) / (2 * sum[2]);
-		double t2 = (-sum[1] - std::sqrt(discriminant)) / (2 * sum[2]);
- 		Vec3 intersection1 = a + d * t1;
- 		Vec3 intersection2 = a + d * t2;
- 		return std::min(new Vec3(intersection1), new Vec3(intersection2), 
-					[&line](const Vec3* a, const Vec3* b) {
- 						double distA = line.getA().distance(*a);
- 						double distB = line.getA().distance(*b);
- 						return distA < distB;
- 					});
+		double t1 = (-sum[1] - std::sqrt(discriminant)) / (2 * sum[2]);
+		double t2 = (-sum[1] + std::sqrt(discriminant)) / (2 * sum[2]);
+ 		double t = -1;
+
+		if (t1 >= 0 && t2 >= 0)
+			t = std::min(t1, t2);
+		else if (t1 >= 0)
+			t = t1;
+		else if (t2 >= 0)
+			t = t2;
+		else
+			return nullptr;
+
+		return new Vec3(a + d * t + this -> center);
     }
 }
 

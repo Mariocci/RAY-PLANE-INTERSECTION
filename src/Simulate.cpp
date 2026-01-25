@@ -13,10 +13,7 @@ static void printVec(const Vec3& v) {
 int main() {
     std::mt19937 gen(12345);
 
-    // Use simple, fixed parameters for manual verification
-    // Sphere: center at origin, radius 1
     Sphere sph(Vec3(0.0f, 0.0f, 0.0f), 1.0f);
-    // Cylinder: axis along z, base center at (2,0,0), top center at (2,0,2), radius 0.5, height 2
     Cylinder cyl(Vec3(2.0f, 0.0f, 0.0f), Vec3(2.0f, 0.0f, 2.0f), 0.5f, 2.0f);
 
     std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
@@ -35,7 +32,6 @@ int main() {
     const int N = 4;
     Vec3 externalPoint(5.0f, 0.0f, 1.0f);
 
-    // Print parameters for manual verification
     std::cout << "--- Parameters (fixed for testing) ---\n";
     std::cout << "Sphere:\n";
     std::cout << "  center: "; printVec(Vec3(0.0f,0.0f,0.0f)); std::cout << "\n";
@@ -97,6 +93,32 @@ int main() {
             std::cout << "  No intersection with Sphere\n";
         }
         std::cout << "\n";
+    }
+    std::cout << "\n--- Edge case tests (Cylinder boundary) ---\n";
+
+    Vec3 edgePoints[] = {
+        Vec3(2.5f, 0.0f, 1.0f),   // side surface
+        Vec3(2.0f, 0.5f, 0.0f),   // bottom rim
+        Vec3(2.0f, -0.5f, 2.0f),  // top rim
+        Vec3(2.5f, 0.0f, 2.0f)    // corner (side + top)
+    };
+
+    for (int i = 0; i < 4; ++i) {
+        Line ray(externalPoint, edgePoints[i]);
+
+        std::cout << "Edge test " << (i+1) << ": target ";
+        printVec(edgePoints[i]);
+        std::cout << "\n";
+
+        Vec3* hit = cyl.lineIntersect(ray);
+        if (hit) {
+            std::cout << "  Intersection at ";
+            printVec(*hit);
+            std::cout << " (distance: " << externalPoint.distance(*hit) << ")\n";
+            delete hit;
+        } else {
+            std::cout << "  No intersection (ERROR)\n";
+        }
     }
 
     return 0;
