@@ -27,7 +27,7 @@ parseCSV(const std::string& filename) {
     }
 
     std::string line;
-    std::getline(file, line); // preskoci header
+    std::getline(file, line);
 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
@@ -41,7 +41,7 @@ parseCSV(const std::string& filename) {
         if (cols.size() < 16) continue;
 
         const std::string& type = cols[1];
-        if (type == "Cube")
+        if (type == "Cube" || type == "Sensor")
             continue;
 
         float px = std::stof(cols[3]);
@@ -58,7 +58,6 @@ parseCSV(const std::string& filename) {
 
         Vec3 center(px, py, pz);
 
-        // 🔵 SPHERE
         if (type == "Sphere") {
             if (radius <= 0.0f) continue;
 
@@ -67,7 +66,6 @@ parseCSV(const std::string& filename) {
             );
         }
 
-        // 🟢 CYLINDER
         else if (type == "Cylinder") {
             if (height <= 0.0f) continue;
 
@@ -76,8 +74,8 @@ parseCSV(const std::string& filename) {
 
             Vec3 axis = normalizeOrDefault(Vec3(rx, ry, rz));
 
-            Vec3 lower = center - axis * (height * 0.5f);
-            Vec3 upper = center + axis * (height * 0.5f);
+            Vec3 lower = center;
+            Vec3 upper = center + axis * height;
 
             bodies.push_back(
                 std::make_unique<Cylinder>(lower, upper, r, height)
