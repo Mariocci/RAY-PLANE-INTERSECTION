@@ -6,62 +6,33 @@
 #include "../include/GeometryBody.h"
 #include "../include/Sphere.h"
 #include "../include/Cylinder.h"
+#include "ParseCSV.h"
 
 using namespace std;
 
+string geometryTypeToString(GeometryType type) {
+    switch (type) {
+    case GeometryType::Sphere: return "Sphere";
+    case GeometryType::Cylinder: return "Cylinder";
+    default: return "Unknown";
+    }
+}
+
 int main() {
-    cout << "Number of random points per body: ";
     int n;
+    cout << "Number of random points per body: ";
     cin >> n;
 
-    cout << "\nInput format:\n";
-    cout << "  sphere   cx cy cz r\n";
-    cout << "  cylinder cx cy cz ax ay az r h\n";
-    cout << "Type 'exit' to quit.\n\n";
+    auto bodies = parseCSV("geometry.csv");
 
-    string type;
-    while (true) {
-        cout << "> ";
-        cin >> type;
-
-        if (!cin || type == "exit") {
-            cout << "Exiting.\n";
-            break;
-        }
-
-        unique_ptr<GeometryBody> body;
-
-        if (type == "sphere") {
-            Vec3 center;
-            double radius;
-
-            cout << "Enter: cx cy cz r: ";
-            cin >> center.x >> center.y >> center.z >> radius;
-
-            body = make_unique<Sphere>(center, radius);
-        }
-        else if (type == "cylinder") {
-            Vec3 center, axis;
-            double radius, height;
-
-            cout << "Enter: cx cy cz ax ay az r h: ";
-            cin >> center.x >> center.y >> center.z
-                >> axis.x >> axis.y >> axis.z
-                >> radius >> height;
-
-            body = make_unique<Cylinder>(center, axis, radius, height);
-        }
-        else {
-            cerr << "Unknown body type.\n";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-
-        cout << "Random points:\n";
-        for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < bodies.size(); ++i) {
+        auto& body = bodies[i];
+        cout << "Body #" << i << " (" << geometryTypeToString(body->getType()) << "):\n";
+        for (int j = 0; j < n; ++j) {
             Vec3 p = body->randomPointInside();
             cout << "  " << p.x << " " << p.y << " " << p.z << "\n";
         }
+        cout << "\n";
     }
 
     return 0;
