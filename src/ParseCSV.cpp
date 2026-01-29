@@ -1,8 +1,11 @@
-#include "parseCSV.h"
+#include "ParseCSV.h"
 
 #include "Sphere.h"
 #include "Cylinder.h"
 #include "Vec3.h"
+#include "Material.h"
+
+#include <algorithm>
 
 #include <fstream>
 #include <sstream>
@@ -15,19 +18,18 @@ static Vec3 normalizeOrDefault(const Vec3& v) {
     return v / n;
 }
 
-std::vector<std::unique_ptr<GeometryBody>>
-parseCSV(const std::string& filename) {
+Scene parseCSV(const std::string& filename) {
+    Scene scene;
+    scene.sensor = Vec3(0, 0, 0);
 
-    std::vector<std::unique_ptr<GeometryBody>> bodies;
     std::ifstream file(filename);
-
     if (!file.is_open()) {
-        std::cerr << "Failed to open CSV: " << filename << "\n";
-        return bodies;
+        std::cerr << "Failed to open CSV\n";
+        return scene;
     }
 
     std::string line;
-    std::getline(file, line); // preskoci header
+    std::getline(file, line); // header
 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
@@ -40,50 +42,57 @@ parseCSV(const std::string& filename) {
 
         if (cols.size() < 16) continue;
 
-        const std::string& type = cols[1];
-        if (type == "Cube")
-            continue;
-
+        std::string material = cols[2];
+        std::transform(material.begin(), material.end(), material.begin(), ::toupper);
         float px = std::stof(cols[3]);
         float py = std::stof(cols[4]);
         float pz = std::stof(cols[5]);
 
-        float rx = std::stof(cols[9]);
-        float ry = std::stof(cols[10]);
-        float rz = std::stof(cols[11]);
-
-        float radius  = std::stof(cols[12]);
-        float radiusX = std::stof(cols[13]);
-        float height  = std::stof(cols[15]);
-
-        Vec3 center(px, py, pz);
-
-        // 🔵 SPHERE
-        if (type == "Sphere") {
-            if (radius <= 0.0f) continue;
-
-            bodies.push_back(
-                std::make_unique<Sphere>(center, radius)
-            );
+        if (material == "SENSOR") {
+            scene.sensor = Vec3(px, py, pz);
+            continue;
         }
 
-        // 🟢 CYLINDER
+        const std::string& type = cols[1];
+        Vec3 center(px, py, pz);
+
+        Material mat = Material::Air;
+        if (material == "LEAD") mat = Material::Lead;
+        else if (material == "CONCRETE") mat = Material::Concrete;
+        else if (material == "AIR") mat = Material::Air;
+        else if (material == "RADIOACTIVE") mat = Material::Radioactive;
+
+        if (type == "Sphere") {
+            float radius = std::stof(cols[12]);
+            if (radius > 0.0f) {
+                scene.bodies.push_back(
+                    std::make_unique<Sphere>(center, radius, mat)
+                );
+            }
+        }
+
         else if (type == "Cylinder") {
-            if (height <= 0.0f) continue;
+            float height  = std::stof(cols[15]);
+            float radiusX = std::stof(cols[13]);
+            float radius  = std::stof(cols[12]);
 
             float r = (radiusX > 0.0f) ? radiusX : radius;
-            if (r <= 0.0f) continue;
+            if (r <= 0.0f || height <= 0.0f) continue;
 
-            Vec3 axis = normalizeOrDefault(Vec3(rx, ry, rz));
+            Vec3 axis = normalizeOrDefault(
+                Vec3(std::stof(cols[9]),
+                     std::stof(cols[10]),
+                     std::stof(cols[11]))
+            );
 
             Vec3 lower = center - axis * (height * 0.5f);
             Vec3 upper = center + axis * (height * 0.5f);
 
-            bodies.push_back(
-                std::make_unique<Cylinder>(lower, upper, r, height)
+            scene.bodies.push_back(
+                std::make_unique<Cylinder>(lower, upper, r, height, mat)
             );
         }
     }
 
-    return bodies;
+    return scene;
 }

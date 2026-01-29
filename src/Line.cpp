@@ -1,7 +1,9 @@
 #include "Line.h"
 #include "GeometryType.h"
 
-Line::Line(const Vec3& a, const Vec3& b) : point_a(a), point_b(b) {}
+Line::Line(const Vec3& a, const Vec3& b, Material mat) : point_a(a), point_b(b) {
+    material = mat;
+}
 
 Vec3* Line::lineIntersect(const Line& line) const {
     Vec3 p1 = point_a;

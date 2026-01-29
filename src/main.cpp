@@ -1,39 +1,68 @@
 #include <iostream>
+#include <vector>
 #include <memory>
-#include <string>
+#include <algorithm>
 #include <limits>
+#include <cmath>
 
-#include "../include/GeometryBody.h"
-#include "../include/Sphere.h"
-#include "../include/Cylinder.h"
 #include "ParseCSV.h"
-
-using namespace std;
-
-string geometryTypeToString(GeometryType type) {
-    switch (type) {
-    case GeometryType::Sphere: return "Sphere";
-    case GeometryType::Cylinder: return "Cylinder";
-    default: return "Unknown";
-    }
-}
+#include "GeometryBody.h"
+#include "Line.h"
+#include "RadiationCalculator.h"
 
 int main() {
+
     int n;
-    cout << "Number of random points per body: ";
-    cin >> n;
+    std::cout << "Number of random points per body: ";
+    std::cin >> n;
 
-    auto bodies = parseCSV("geometry.csv");
+    Scene scene = parseCSV("geometry.csv");
 
-    for (size_t i = 0; i < bodies.size(); ++i) {
-        auto& body = bodies[i];
-        cout << "Body #" << i << " (" << geometryTypeToString(body->getType()) << "):\n";
-        for (int j = 0; j < n; ++j) {
-            Vec3 p = body->randomPointInside();
-            cout << "  " << p.x << " " << p.y << " " << p.z << "\n";
-        }
-        cout << "\n";
+    const Vec3& sensor = scene.sensor;
+    const auto& bodies = scene.bodies;
+    std::vector<const GeometryBody*> sources;
+    for (const auto& b : bodies) {
+        if (b->material == Material::Radioactive) sources.push_back(b.get());
     }
+
+    if (sources.empty()) {
+        std::cerr << "Warning: no radioactive source bodies found in scene.\n";
+        return 1;
+    }
+
+    if (sources.size() > 1) {
+        std::cout << "Warning: multiple radioactive sources found, using the first one.\n";
+    }
+    const GeometryBody* sourceBody = sources.front();
+
+    double sumRadiation = 0.0;
+    double minRadiation = std::numeric_limits<double>::infinity();
+    double maxRadiation = -std::numeric_limits<double>::infinity();
+    double sumsq = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        Vec3 sourcePoint = sourceBody->randomPointInside();
+        double radiation = RadiationCalculator::compute(sensor, sourcePoint, bodies);
+        sumRadiation += radiation;
+        sumsq += radiation * radiation;
+        if (radiation < minRadiation) minRadiation = radiation;
+        if (radiation > maxRadiation) maxRadiation = radiation;
+    }
+
+    double avg = (n > 0) ? (sumRadiation / n) : 0.0;
+    double variance = (n > 1) ? (sumsq - (sumRadiation * sumRadiation) / n) / (n - 1) : 0.0;
+    double stddev = (variance > 0.0) ? std::sqrt(variance) : 0.0;
+
+    std::cout << "Samples: " << n << "\n";
+    std::cout << "Average radiation: " << avg << "\n";
+    std::cout << "Min radiation: " << minRadiation << "\n";
+    std::cout << "Max radiation: " << maxRadiation << "\n";
+    std::cout << "Stddev: " << stddev << "\n";
+
+    double se = (n > 0) ? (stddev / std::sqrt((double)n)) : 0.0;
+    double ci95 = 1.96 * se;
+    std::cout << "StdErr: " << se << "\n";
+    std::cout << "95% CI for mean: [" << (avg - ci95) << ", " << (avg + ci95) << "]\n";
 
     return 0;
 }

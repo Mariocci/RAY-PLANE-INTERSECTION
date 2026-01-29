@@ -2,6 +2,7 @@
 
 #include "GeometryBody.h"
 #include "Vec3.h"
+#include "Material.h"
 
 class Line : public GeometryBody {
     private:
@@ -9,7 +10,7 @@ class Line : public GeometryBody {
         Vec3 point_b;
         static const GeometryType type;
     public:
-        Line(const Vec3& a, const Vec3& b);
+        Line(const Vec3& a, const Vec3& b, Material mat = Material::Air);
         ~Line() override {}
 
         Vec3* lineIntersect(const Line& line) const override;

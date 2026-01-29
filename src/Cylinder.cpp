@@ -10,8 +10,11 @@ const GeometryType Cylinder::type = GeometryType::Cylinder;
 Cylinder::Cylinder(Vec3 base_center_lower, 
 				   Vec3 base_center_upper,
 				   float radius,
-				   float height
-				  ) : base_center_lower(base_center_lower), base_center_upper(base_center_upper), radius(radius), height(height) {}
+				   float height,
+				   Material mat
+				  ) : base_center_lower(base_center_lower), base_center_upper(base_center_upper), radius(radius), height(height) {
+	material = mat;
+}
 
 Vec3* Cylinder::lineIntersect(const Line& line) const {
 	Vec3 a = line.getA();

@@ -3,7 +3,14 @@
 #include <memory>
 #include <string>
 
+#include "Vec3.h"
+#include "Material.h"
+
 class GeometryBody;
 
-std::vector<std::unique_ptr<GeometryBody>>
-parseCSV(const std::string& filename);
+struct Scene {
+    Vec3 sensor;
+    std::vector<std::unique_ptr<GeometryBody>> bodies;
+};
+
+Scene parseCSV(const std::string& filename);

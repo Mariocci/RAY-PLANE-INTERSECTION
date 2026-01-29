@@ -2,6 +2,7 @@
 
 #include "GeometryBody.h"
 #include "Vec3.h"
+#include "Material.h"
 
 class Cylinder : public GeometryBody {
     private:
@@ -14,7 +15,8 @@ class Cylinder : public GeometryBody {
         Cylinder(Vec3 base_center_lower, 
                 Vec3 base_center_upper,
                 float radius,
-                float height
+                float height,
+                Material mat = Material::Air
             );
         ~Cylinder() override {}
 

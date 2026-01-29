@@ -3,6 +3,7 @@
 #include "GeometryBody.h"
 #include "Vec3.h"
 #include "GeometryType.h"
+#include "Material.h"
 
 class Line;
 
@@ -12,7 +13,7 @@ class Sphere : public GeometryBody {
         float radius;
         static const GeometryType type;
     public:
-        Sphere(const Vec3& center, const float radius);
+        Sphere(const Vec3& center, const float radius, Material mat = Material::Air);
         ~Sphere() override {}
 
         Vec3* lineIntersect(const Line& line) const override;

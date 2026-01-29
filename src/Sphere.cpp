@@ -7,7 +7,9 @@
 
 const GeometryType Sphere::type = GeometryType::Sphere;
 
-Sphere::Sphere(const Vec3& center, const float radius) : center(center), radius(radius) {}
+Sphere::Sphere(const Vec3& center, const float radius, Material mat) : center(center), radius(radius) {
+	material = mat;
+}
 
 Vec3* Sphere::lineIntersect(const Line& line) const {
     Vec3 a = line.getA();

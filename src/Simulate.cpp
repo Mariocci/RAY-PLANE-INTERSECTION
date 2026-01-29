@@ -4,6 +4,8 @@
 #include "../include/Sphere.h"
 #include "../include/Cylinder.h"
 #include "../include/Line.h"
+#include "../include/Material.h"
+#include <cmath>
 
 static void printVec(const Vec3& v) {
     std::cout << std::fixed << std::setprecision(6)
@@ -13,8 +15,8 @@ static void printVec(const Vec3& v) {
 int main() {
     std::mt19937 gen(12345);
 
-    Sphere sph(Vec3(0.0f, 0.0f, 0.0f), 1.0f);
-    Cylinder cyl(Vec3(2.0f, 0.0f, 0.0f), Vec3(2.0f, 0.0f, 2.0f), 0.5f, 2.0f);
+    Sphere sph(Vec3(0.0f, 0.0f, 0.0f), 1.0f, Material::Concrete);
+    Cylinder cyl(Vec3(2.0f, 0.0f, 0.0f), Vec3(2.0f, 0.0f, 2.0f), 0.5f, 2.0f, Material::Lead);
 
     std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
 
