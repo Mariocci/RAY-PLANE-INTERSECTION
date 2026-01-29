@@ -13,7 +13,7 @@
 int main() {
 
     int n;
-    std::cout << "Number of random points per body: ";
+    std::cout << "Number of random points per selected source: ";
     std::cin >> n;
 
     Scene scene = parseCSV("geometry.csv");
