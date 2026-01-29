@@ -41,6 +41,8 @@ parseCSV(const std::string& filename) {
         if (cols.size() < 16) continue;
 
         const std::string& type = cols[1];
+        //Skip Cube objects
+        //TODO Implement Sensor logic
         if (type == "Cube" || type == "Sensor")
             continue;
 
