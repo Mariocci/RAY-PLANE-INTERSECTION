@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -10,13 +11,35 @@
 #include "Line.h"
 #include "RadiationCalculator.h"
 
-int main() {
+int main(int argc, char** argv) {
 
-    int n;
-    std::cout << "Number of random points per selected source: ";
-    std::cin >> n;
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <path-to-csv> [num-samples]\n";
+        return 1;
+    }
 
-    Scene scene = parseCSV("geometry.csv");
+    std::string csvPath = argv[1];
+    std::cout << "Using CSV: " << csvPath << "\n";
+
+    int n = -1;
+    if (argc >= 3) {
+        try {
+            n = std::stoi(argv[2]);
+            if (n <= 0) {
+                std::cerr << "Invalid sample count: must be > 0\n";
+                return 1;
+            }
+            std::cout << "Number of random points per selected source (from arg): " << n << "\n";
+        } catch (...) {
+            std::cerr << "Failed to parse sample count argument\n";
+            return 1;
+        }
+    } else {
+        std::cout << "Number of random points per selected source: ";
+        std::cin >> n;
+    }
+
+    Scene scene = parseCSV(csvPath);
 
     const Vec3& sensor = scene.sensor;
     const auto& bodies = scene.bodies;
