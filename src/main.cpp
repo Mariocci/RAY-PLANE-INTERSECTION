@@ -54,15 +54,15 @@ int main() {
     double stddev = (variance > 0.0) ? std::sqrt(variance) : 0.0;
 
     std::cout << "Samples: " << n << "\n";
-    std::cout << "Average radiation: " << avg << "\n";
-    std::cout << "Min radiation: " << minRadiation << "\n";
-    std::cout << "Max radiation: " << maxRadiation << "\n";
-    std::cout << "Stddev: " << stddev << "\n";
+    std::cout << "Average radiation: " << avg << " (photons/s)\n";
+    std::cout << "Min radiation: " << minRadiation << " (photons/s)\n";
+    std::cout << "Max radiation: " << maxRadiation << " (photons/s)\n";
+    std::cout << "Stddev: " << stddev << " (photons/s)\n";
 
     double se = (n > 0) ? (stddev / std::sqrt((double)n)) : 0.0;
     double ci95 = 1.96 * se;
-    std::cout << "StdErr: " << se << "\n";
-    std::cout << "95% CI for mean: [" << (avg - ci95) << ", " << (avg + ci95) << "]\n";
+    std::cout << "StdErr: " << se << " (photons/s)\n";
+    std::cout << "95% CI for mean: [" << (avg - ci95) << ", " << (avg + ci95) << "] (photons/s)\n";
 
     return 0;
 }

@@ -40,9 +40,15 @@ double RadiationCalculator::compute(
         prev = inter.point;
     }
 
-    // final segment from last intersection (or source if none) to sensor: treat as air
     double finalLen = prev.distance(sensor);
     transmission *= std::exp(-RadiationConstants::ABSORPTION_AIR * finalLen);
 
-    return transmission * RadiationConstants::SENSOR_EFFICIENCY;
+    // Convert transmission coefficient into received radiation at the sensor.
+    // Use simple isotropic source model: received = SOURCE_STRENGTH * transmission * (A_sensor / (4*pi*r^2)) * efficiency
+    double r = sourcePoint.distance(sensor);
+    if (r < RadiationConstants::EPSILON) r = RadiationConstants::EPSILON;
+    double geometricFactor = RadiationConstants::SENSOR_AREA / (4.0 * RadiationConstants::PI * r * r);
+    double received = RadiationConstants::SOURCE_STRENGTH * transmission * geometricFactor * RadiationConstants::SENSOR_EFFICIENCY;
+
+    return received;
 }
