@@ -13,30 +13,66 @@
 
 int main(int argc, char** argv) {
 
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <path-to-csv> [num-samples]\n";
+    std::string csvPath;
+    int n = -1;
+
+    auto printUsage = [&](bool full=false) {
+        std::cerr << "Usage: " << argv[0] << " -p <path-to-csv> [-n <num-samples>]\n";
+        if (full) {
+            std::cerr << "  -p, --path   Path to CSV scene file (required)\n";
+            std::cerr << "  -n, --num    Number of random samples per source (optional)\n";
+            std::cerr << "  -h, --help   Show this help message\n";
+        }
+    };
+
+    for (int i = 1; i < argc; ++i) {
+        std::string a = argv[i];
+        if (a == "-p" || a == "--path") {
+            if (i + 1 < argc) {
+                csvPath = argv[++i];
+            } else {
+                std::cerr << "Error: missing value for " << a << "\n";
+                printUsage();
+                return 1;
+            }
+        } else if (a == "-n" || a == "--num") {
+            if (i + 1 < argc) {
+                try {
+                    n = std::stoi(argv[++i]);
+                    if (n <= 0) { std::cerr << "Invalid sample count: must be > 0\n"; return 1; }
+                } catch (...) {
+                    std::cerr << "Failed to parse sample count argument\n";
+                    return 1;
+                }
+            } else {
+                std::cerr << "Error: missing value for " << a << "\n";
+                printUsage();
+                return 1;
+            }
+        } else if (a == "-h" || a == "--help") {
+            printUsage(true);
+            return 0;
+        } else {
+            std::cerr << "Unknown argument: " << a << "\n";
+            printUsage();
+            return 1;
+        }
+    }
+
+    if (csvPath.empty()) {
+        std::cerr << "Error: CSV path is required.\n";
+        printUsage();
         return 1;
     }
 
-    std::string csvPath = argv[1];
     std::cout << "Using CSV: " << csvPath << "\n";
 
-    int n = -1;
-    if (argc >= 3) {
-        try {
-            n = std::stoi(argv[2]);
-            if (n <= 0) {
-                std::cerr << "Invalid sample count: must be > 0\n";
-                return 1;
-            }
-            std::cout << "Number of random points per selected source (from arg): " << n << "\n";
-        } catch (...) {
-            std::cerr << "Failed to parse sample count argument\n";
-            return 1;
-        }
-    } else {
+    if (n == -1) {
         std::cout << "Number of random points per selected source: ";
         std::cin >> n;
+        if (n <= 0) { std::cerr << "Invalid sample count: must be > 0\n"; return 1; }
+    } else {
+        std::cout << "Number of random points per selected source (from arg): " << n << "\n";
     }
 
     Scene scene = parseCSV(csvPath);
